@@ -2,7 +2,6 @@ import * as request     from 'request-promise-native'
 import * as TelegramBot from 'node-telegram-bot-api'
 import * as faceapp     from 'faceapp'
 import * as fs          from 'fs'
-import { reduce }       from 'bluebird'
 import token            from './token'
 
 /**
@@ -14,33 +13,6 @@ const bot: TelegramBot = new TelegramBot(token, { polling: true })
  * Limit of filters
  */
 const MAX_FILTERS = 3
-
-/**
- * List of available filters
- */
-const availableFilters: string[] = [
-  'no-filter',
-  'smile',
-  'smile_2',
-  'hot',
-  'old',
-  'young',
-  'female_2',
-  'female',
-  'male',
-  'pan',
-  'hitman',
-  'hollywood',
-  'heisenberg',
-  'impression',
-  'lion',
-  'goatee',
-  'hipster',
-  'bangs',
-  'glasses',
-  'wave',
-  'makeup',
-]
 
 /**
  * Processes the actions in a chat. Matches "/face @[username]"
@@ -57,8 +29,8 @@ bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
     return 
   }
 
-  const filters: string[] = checkFilters(filtersMatch)
-  if (availableFilters.length === 0) {
+  const filters: string[] = await checkFilters(filtersMatch)
+  if (filters.length === 0) {
     bot.sendMessage(
       chatId, 
       'Enter an available filter. To get the list of filters, type /filters'
@@ -75,16 +47,16 @@ bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
   }
   
   try {
-    // Applying filters
-    const filteredAvatarBuffer = await reduce(
-      filters, 
-      (acc: Buffer, filter: string) => applyFilter(acc, filter), 
-      avatarBuffer
-    )
+    let filteredAvatarBuffer: Buffer = avatarBuffer
+
+    for (let filter of filters) {
+      filteredAvatarBuffer = await applyFilter(filteredAvatarBuffer, filter)
+    }
 
     // Sending image 
     bot.sendPhoto(chatId, filteredAvatarBuffer)
   } catch(err) {
+    console.log(err, typeof err)
     bot.sendMessage(chatId, err)
   }
 })
@@ -93,8 +65,9 @@ bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
 /**
  * Writes list of filters by request
  */
-bot.onText(/\/filters/, msg => {
-  bot.sendMessage(msg.chat.id, availableFilters.join('\n'))
+bot.onText(/\/filters/, async msg => {
+  const filtersList: string[] = await getAvailableFilters()
+  bot.sendMessage(msg.chat.id, filtersList.join('\n'))
 })
 
 /**
@@ -128,10 +101,14 @@ async function getUserAvatar(username: string): Promise<Buffer | null> {
  * @param  {string} filtersMatch 
  * @return {Array}
  */
-function checkFilters(filtersMatch: string): string[] {
-  return filtersMatch.split(' ').filter(
-    item => availableFilters.includes(item)
-  ).slice(0, MAX_FILTERS)
+async function checkFilters(filtersMatch: string): Promise<string[]> {
+  const filtersList: string[] = await getAvailableFilters()
+
+  return filtersMatch
+    .split(' ')
+    .filter(item => filtersList.includes(item))
+    .map(item => item.slice().toLowerCase())
+    .slice(0, MAX_FILTERS)
 } 
 
 /**
@@ -140,10 +117,13 @@ function checkFilters(filtersMatch: string): string[] {
  * @prop {string} filter
  */
 async function applyFilter(buffer: Buffer, filter: string): Promise<Buffer> {
-  if (!availableFilters.includes(filter)) {
-    return buffer
-  }
-
   const output: Buffer = await faceapp.process(buffer, filter)
   return output
+}
+
+/**
+ * Returns list of available filters
+ */
+async function getAvailableFilters(): Promise<string[]> {
+  return await faceapp.listFilters(true)
 }

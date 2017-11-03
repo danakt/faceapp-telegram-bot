@@ -13,8 +13,6 @@
     "typescript": "^2.6.1"
   },
   "dependencies": {
-    "@types/bluebird": "^3.5.18",
-    "bluebird": "^3.5.1",
     "faceapp": "^0.3.2",
     "node-telegram-bot-api": "^0.29.0",
     "request-promise-native": "^1.0.5"
