@@ -1,7 +1,6 @@
 import * as request     from 'request-promise-native'
 import * as TelegramBot from 'node-telegram-bot-api'
 import * as faceapp     from 'faceapp'
-import * as fs          from 'fs'
 import token            from './token'
 
 /**
