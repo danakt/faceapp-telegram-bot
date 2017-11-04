@@ -1,6 +1,7 @@
-import * as request     from 'request-promise-native'
+import * as request     from 'request-promise'
 import * as TelegramBot from 'node-telegram-bot-api'
 import * as faceapp     from 'faceapp'
+import * as colors      from 'colors'
 import token            from './token'
 
 /**
@@ -11,7 +12,7 @@ const bot: TelegramBot = new TelegramBot(token, { polling: true })
 /**
  * Limit of filters
  */
-const MAX_FILTERS = 3
+const MAX_FILTERS = 5
 
 /**
  * Processes the actions in a chat. Matches "/face @[username]"
@@ -21,12 +22,7 @@ bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
   const username: string      = match[match.length - 1]
   const filtersMatch: string  = match[1].trim()
 
-  // Create list of filters
-  if (filtersMatch === '') {
-    // Enter filter, please
-    bot.sendMessage(chatId, 'Enter a filter to apply')
-    return 
-  }
+  console.log(`\n\n${colors.yellow('/filter')} ${filtersMatch} ${colors.green(username)}`)
 
   const filters: string[] = await checkFilters(filtersMatch)
   if (filters.length === 0) {
@@ -37,6 +33,8 @@ bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
     return 
   }
 
+  console.log('filters is checked')
+
   // Getting avatar
   const avatarBuffer: null | Buffer = await getUserAvatar(username)
   if (avatarBuffer == null) {
@@ -44,14 +42,18 @@ bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
     
     return
   }
+
+  console.log('avatar is getted')
   
   try {
     let filteredAvatarBuffer: Buffer = avatarBuffer
 
     for (let filter of filters) {
       filteredAvatarBuffer = await applyFilter(filteredAvatarBuffer, filter)
+      console.log(`filter «${filter}» is applied to avatar`)
     }
 
+    
     // Sending image 
     bot.sendPhoto(chatId, filteredAvatarBuffer)
   } catch(err) {
