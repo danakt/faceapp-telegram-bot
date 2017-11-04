@@ -15,6 +15,22 @@ const bot: TelegramBot = new TelegramBot(token, { polling: true })
 const MAX_FILTERS = 5
 
 /**
+ * Starting dialog with bot
+ */
+bot.onText(/^\/start/, msg => {
+  const message = 'Hello, I\'m Awesome FaceApp Bot. To apply the filter to ' +
+    'the user\'s avatar, type /face [filter] @[username]. Example: \n' +
+    '/face smile @AwesomeFaceAppBot\n\n' +
+
+    `You can combine up to ${MAX_FILTERS} filters. E.g.\n` +
+    '/face smile female hot @AwesomeFaceAppBot\n\n' + 
+    
+    'To get a list of all available filters, type /filters'
+
+  bot.sendMessage(msg.chat.id, message)
+})
+
+/**
  * Processes the actions in a chat. Matches "/face @[username]"
  */
 bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
