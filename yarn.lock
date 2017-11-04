@@ -263,6 +263,13 @@ faceapp@^0.3.2:
     randomstring "^1.1.5"
     superagent "^3.8.0"
 
+"faceapp@https://github.com/lolPants/faceapp.js":
+  version "0.3.2"
+  resolved "https://github.com/lolPants/faceapp.js#1161f6283a972c25aeacb0d03f6babd17f91e53e"
+  dependencies:
+    randomstring "^1.1.5"
+    superagent "^3.8.0"
+
 fast-deep-equal@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-1.0.0.tgz#96256a3bc975595eb36d82e9929d060d893439ff"

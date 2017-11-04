@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "colors": "^1.1.2",
-    "faceapp": "^0.3.2",
+    "faceapp": "https://github.com/lolPants/faceapp.js",
     "node-telegram-bot-api": "^0.29.0",
     "request-promise": "^4.2.2"
   }
