@@ -17,7 +17,7 @@ const MAX_FILTERS = 5
  */
 bot.onText(/^\/start/, msg => {
   const message = 'Hello, I\'m Awesome FaceApp Bot. To apply a filter to ' +
-    'the user\'s avatar, type /face [filter] @[username]. Example: \n' +
+    'the user\'s avatar, type /face <filter> <@username>. Example: \n' +
     '/face smile @AwesomeFaceAppBot\n\n' +
 
     `You can combine up to ${MAX_FILTERS} filters. E.g.:\n` +
@@ -38,36 +38,36 @@ bot.onText(/^\/filters/, async msg => {
 })
 
 /**
- * Processing user avatar
- * @event /face [filters] @[username]
+ * Processing photo
+ * @event /face
  */
-bot.onText(/\/face ([A-z0-9_-\s]*) @([A-z0-9_]{5,})\s*$/, async (msg, match) => {
-  const username: string  = match[match.length - 1]
-  const filters: string[] = await prepareFilters(match[1], MAX_FILTERS)
-    
-  if (filters.length === 0) {
-    throw new Error('Введите фильтры')
+bot.onText(/^\/face.*$/, async msg => {
+  try {
+    const matchUser = msg.text.match(/^\/face ([A-z0-9_-\s]*) @([A-z0-9_]{5,})\s*$/)
+    const matchUrl  = msg.text.match(/^\/face ([A-z0-9_-\s]*) (https?:\/\/.*)/)
+    const match     = matchUser || matchUrl
+
+    // If no matches, show usage
+    if (!match || !match[1]) {
+      throw new Error('Usage: /face <filters> <@username>')
+    }
+
+    // Prepare and check filters
+    const filters: string[] = await prepareFilters(match[1], MAX_FILTERS)
+    if (filters.length === 0) {
+      throw new Error('No filters inputted')
+    }
+
+    const target: string = match[match.length - 1]
+
+    // Get photo url
+    const photoUrl: string = matchUser
+      ? await getAvatarUrl(target)
+      : target
+
+    const processedPhoto: Buffer = await processPhoto(filters, photoUrl)
+    bot.sendPhoto(msg.chat.id, processedPhoto)
+  } catch(err) {
+    bot.sendMessage(msg.chat.id, err.message)
   }
-
-  const avatarUrl: string = await getAvatarUrl(username)
-  const processedPhoto: Buffer = await processPhoto(filters, avatarUrl)
-
-  bot.sendPhoto(msg.chat.id, processedPhoto)
-})
-
-/**
- * Processing image by url
- * @event /face [filters] [url]
- */
-bot.onText(/\/face ([A-z0-9_-\s]*) (https?:\/\/.*)/, async (msg, match) => {
-  const url: string       = match[match.length - 1]
-  const filters: string[] = await prepareFilters(match[1], MAX_FILTERS)
-    
-  if (filters.length === 0) {
-    throw new Error('Введите фильтры')
-  }
-
-  const processedPhoto: Buffer = await processPhoto(filters, url)
-
-  bot.sendPhoto(msg.chat.id, processedPhoto)
 })
