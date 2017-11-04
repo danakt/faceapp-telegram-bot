@@ -18,13 +18,13 @@ const MAX_FILTERS = 5
  * Starting dialog with bot
  */
 bot.onText(/^\/start/, msg => {
-  const message = 'Hello, I\'m Awesome FaceApp Bot. To apply the filter to ' +
+  const message = 'Hello, I\'m Awesome FaceApp Bot. To apply a filter to ' +
     'the user\'s avatar, type /face [filter] @[username]. Example: \n' +
     '/face smile @AwesomeFaceAppBot\n\n' +
 
-    `You can combine up to ${MAX_FILTERS} filters. E.g.\n` +
+    `You can combine up to ${MAX_FILTERS} filters. E.g.:\n` +
     '/face smile female hot @AwesomeFaceAppBot\n\n' + 
-    
+
     'To get a list of all available filters, type /filters'
 
   bot.sendMessage(msg.chat.id, message)
@@ -38,30 +38,30 @@ bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
   const username: string      = match[match.length - 1]
   const filtersMatch: string  = match[1].trim()
 
-  console.log(`\n\n${colors.yellow('/filter')} ${filtersMatch} ${colors.green(username)}`)
-
-  const filters: string[] = await checkFilters(filtersMatch)
-  if (filters.length === 0) {
-    bot.sendMessage(
-      chatId, 
-      'Enter an available filter. To get the list of filters, type /filters'
-    )
-    return 
-  }
-
-  console.log('filters is checked')
-
-  // Getting avatar
-  const avatarBuffer: null | Buffer = await getUserAvatar(username)
-  if (avatarBuffer == null) {
-    bot.sendMessage(chatId, 'Avatar is not found')
-    
-    return
-  }
-
-  console.log('avatar is getted')
-  
   try {
+    console.log(`\n\n${colors.yellow('/filter')} ${filtersMatch} ${colors.green(username)}`)
+
+    const filters: string[] = await checkFilters(filtersMatch)
+    if (filters.length === 0) {
+      bot.sendMessage(
+        chatId, 
+        'Enter an available filter. To get the list of filters, type /filters'
+      )
+      return 
+    }
+
+    console.log('filters is checked')
+
+    // Getting avatar
+    const avatarBuffer: null | Buffer = await getUserAvatar(username)
+    if (avatarBuffer == null) {
+      bot.sendMessage(chatId, 'Avatar is not found')
+      
+      return
+    }
+
+    console.log('avatar is getted')
+    
     let filteredAvatarBuffer: Buffer = avatarBuffer
 
     for (let filter of filters) {
@@ -73,8 +73,16 @@ bot.onText(/\/face ([^@]*)\s?@(.+)/, async (msg, match) => {
     // Sending image 
     bot.sendPhoto(chatId, filteredAvatarBuffer)
   } catch(err) {
-    console.log(err, typeof err)
-    bot.sendMessage(chatId, err)
+    switch (err.message) {
+      case 'No Faces found in Photo': {
+        bot.sendMessage(chatId, 'No faces found in avatar :(')
+      }
+
+      default: {
+        bot.sendMessage(chatId, 'Unknown error :(')
+        console.log(err)
+      }
+    }
   }
 })
 
