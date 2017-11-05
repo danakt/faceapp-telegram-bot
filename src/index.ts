@@ -1,5 +1,4 @@
 import * as TelegramBot     from 'node-telegram-bot-api'
-import token                from './token'
 import { logRequest }       from './utils/log'
 import prepareFilters       from './utils/prepareFilters'
 import getAvatarUrl         from './utils/getAvatarUrl'
@@ -7,7 +6,7 @@ import processPhoto         from './utils/processPhoto'
 import getAvailableFilters  from './utils/getAvailableFilters'
 
 /** Bot instance */
-const bot: TelegramBot = new TelegramBot(token, { polling: true })
+const bot: TelegramBot = new TelegramBot(process.env.TOKEN, { polling: true })
 
 /** Limit of filters */
 const MAX_FILTERS = 5
