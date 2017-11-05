@@ -19,7 +19,7 @@ bot.onText(/^\/start/, msg => {
   const message = `
 Hello! I'm Awesome FaceApp Bot.
 
-Type  \`/face <filter> <@username>\` to apply a filter to the user's avatar. Example:
+Type \`/face <filter> <@username>\` to apply a filter to the user's avatar. Example:
 /face smile @AwesomeFaceAppBot
 
 Type \`/face <filter> <url>\` to apply a filter to photo by url. Example:
