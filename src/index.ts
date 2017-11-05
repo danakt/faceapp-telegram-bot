@@ -23,7 +23,7 @@ Type  \`/face <filter> <@username>\` to apply a filter to the user's avatar. Exa
 /face smile @AwesomeFaceAppBot
 
 Type \`/face <filter> <url>\` to apply a filter to image by url. Example:
-/face smile https://example.com/image.jpg
+/face smile https://i.imgur.com/nVsxMNp.jpg
 
 You can combine up to ${MAX_FILTERS} filters. E.g.:
 /face smile female hot @AwesomeFaceAppBot
@@ -48,6 +48,7 @@ bot.onText(/^\/filters|^\/list/, async msg => {
  */
 bot.onText(/^\/face.*$/, async msg => {
   const chatId: number = msg.chat.id
+  let waitMessage
 
   try {
     const matchUser = msg.text.match(/^\/face ([A-z0-9_-\s]*) @([A-z0-9_]{5,})\s*$/)
@@ -66,7 +67,7 @@ bot.onText(/^\/face.*$/, async msg => {
     }
 
     // Sending the waiting message
-    const waitMessage = await bot.sendMessage(chatId, 'Please wait, the photo is being processed...', {
+    waitMessage = await bot.sendMessage(chatId, 'Please wait, the photo is being processed...', {
       disable_notification: true
     })
     if (waitMessage instanceof Error) {
@@ -80,9 +81,10 @@ bot.onText(/^\/face.*$/, async msg => {
       : target
 
     const processedPhoto: Buffer = await processPhoto(filters, photoUrl)
-    bot.deleteMessage(chatId, waitMessage.message_id.toString())
     bot.sendPhoto(chatId, processedPhoto)
   } catch(err) {
     bot.sendMessage(chatId, err.message)
+  } finally {
+    bot.deleteMessage(chatId, waitMessage.message_id.toString())
   }
 })
