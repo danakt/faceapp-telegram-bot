@@ -22,8 +22,8 @@ Hello! I'm Awesome FaceApp Bot.
 Type  \`/face <filter> <@username>\` to apply a filter to the user's avatar. Example:
 /face smile @AwesomeFaceAppBot
 
-Type \`/face <filter> <url>\` to apply a filter to image by url. Example:
-/face smile https://i.imgur.com/nVsxMNp.jpg
+Type \`/face <filter> <url>\` to apply a filter to photo by url. Example:
+/face smile https://example.com/photo.jpg
 
 You can combine up to ${MAX_FILTERS} filters. E.g.:
 /face smile female hot @AwesomeFaceAppBot
