@@ -16,7 +16,7 @@ const MAX_FILTERS = 5
  * Starting dialog with bot
  * @event /start
  */
-bot.onText(/^\/start/, msg => {
+bot.onText(/^\/start|^\/help/, msg => {
   const message = `
 Hello! I'm Awesome FaceApp Bot.
 
