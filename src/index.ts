@@ -32,7 +32,7 @@ bot.onText(/^\/start/, msg => {
  * Showing list of filters by request
  * @event /filters
  */
-bot.onText(/^\/filters/, async msg => {
+bot.onText(/^\/filters|^\/list/, async msg => {
   const filtersList: string[] = await getAvailableFilters()
   bot.sendMessage(msg.chat.id, filtersList.join('\n'))
 })
