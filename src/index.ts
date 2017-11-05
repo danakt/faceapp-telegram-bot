@@ -16,16 +16,21 @@ const MAX_FILTERS = 5
  * @event /start
  */
 bot.onText(/^\/start/, msg => {
-  const message = 'Hello, I\'m Awesome FaceApp Bot. To apply a filter to ' +
-    'the user\'s avatar, type /face <filter> <@username>. Example: \n' +
-    '/face smile @AwesomeFaceAppBot\n\n' +
+  const message = `
+Hello! I'm Awesome FaceApp Bot.
 
-    `You can combine up to ${MAX_FILTERS} filters. E.g.:\n` +
-    '/face smile female hot @AwesomeFaceAppBot\n\n' + 
+Type  \`/face <filter> <@username>\` to apply a filter to the user's avatar. Example:
+/face smile @AwesomeFaceAppBot
 
-    'To get a list of all available filters, type /filters'
+Type \`/face <filter> <url>\` to apply a filter to image by url. Example:
+/face smile https://example.com/image.jpg
 
-  bot.sendMessage(msg.chat.id, message)
+You can combine up to ${MAX_FILTERS} filters. E.g.:
+/face smile female hot @AwesomeFaceAppBot
+
+Type \`/filters\` or \`/list\` to get a list of all available filters`
+
+  bot.sendMessage(msg.chat.id, message, { parse_mode: 'Markdown' })
 })
 
 /**
