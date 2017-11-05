@@ -1,6 +1,6 @@
 # FaceApp Telegram Bot
 
-[Open in telegram](https://t.me/AwesomeFaceAppBot)
+### [Open in telegram](https://t.me/AwesomeFaceAppBot)
 
 Type `/face <filter> <@username>` to apply a filter to the user's avatar. Example:  
 `/face smile @AwesomeFaceAppBot`  
