@@ -1,5 +1,6 @@
 import * as TelegramBot     from 'node-telegram-bot-api'
 import token                from './token'
+import { logRequest }       from './utils/log'
 import prepareFilters       from './utils/prepareFilters'
 import getAvatarUrl         from './utils/getAvatarUrl'
 import processPhoto         from './utils/processPhoto'
@@ -65,6 +66,9 @@ bot.onText(/^\/face.*$/, async msg => {
     if (filters.length === 0) {
       throw new Error('No filters inputted')
     }
+
+    // Logging
+    logRequest(msg)
 
     // Sending the waiting message
     waitMessage = await bot.sendMessage(chatId, 'Please wait, the photo is being processed...', {
