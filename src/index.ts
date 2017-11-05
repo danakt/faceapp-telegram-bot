@@ -47,6 +47,8 @@ bot.onText(/^\/filters|^\/list/, async msg => {
  * @event /face
  */
 bot.onText(/^\/face.*$/, async msg => {
+  const chatId: number = msg.chat.id
+
   try {
     const matchUser = msg.text.match(/^\/face ([A-z0-9_-\s]*) @([A-z0-9_]{5,})\s*$/)
     const matchUrl  = msg.text.match(/^\/face ([A-z0-9_-\s]*) (https?:\/\/.*)/)
@@ -63,16 +65,24 @@ bot.onText(/^\/face.*$/, async msg => {
       throw new Error('No filters inputted')
     }
 
-    const target: string = match[match.length - 1]
+    // Sending the waiting message
+    const waitMessage = await bot.sendMessage(chatId, 'Please wait, the photo is being processed...', {
+      disable_notification: true
+    })
+    if (waitMessage instanceof Error) {
+      throw waitMessage
+    }
 
     // Get photo url
+    const target: string = match[match.length - 1]
     const photoUrl: string = matchUser
       ? await getAvatarUrl(target)
       : target
 
     const processedPhoto: Buffer = await processPhoto(filters, photoUrl)
-    bot.sendPhoto(msg.chat.id, processedPhoto)
+    bot.deleteMessage(chatId, waitMessage.message_id.toString())
+    bot.sendPhoto(chatId, processedPhoto)
   } catch(err) {
-    bot.sendMessage(msg.chat.id, err.message)
+    bot.sendMessage(chatId, err.message)
   }
 })
