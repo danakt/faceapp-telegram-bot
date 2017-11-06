@@ -1,9 +1,9 @@
-import * as TelegramBot     from 'node-telegram-bot-api'
-import { logRequest }       from './utils/log'
-import prepareFilters       from './utils/prepareFilters'
-import getAvatarUrl         from './utils/getAvatarUrl'
-import processPhoto         from './utils/processPhoto'
-import getAvailableFilters  from './utils/getAvailableFilters'
+import * as TelegramBot               from 'node-telegram-bot-api'
+import { logRequest, writeLogToFile } from './utils/log'
+import prepareFilters                 from './utils/prepareFilters'
+import getAvatarUrl                   from './utils/getAvatarUrl'
+import processPhoto                   from './utils/processPhoto'
+import getAvailableFilters            from './utils/getAvailableFilters'
 
 /** Bot instance */
 const bot: TelegramBot = new TelegramBot(process.env.TOKEN, { polling: true })
@@ -52,18 +52,20 @@ bot.onText(/^\/face.*$/, async msg => {
 
   try {
     const matchUser = msg.text.match(/^\/face ([A-z0-9_-\s]*) @([A-z0-9_]{5,})\s*$/)
-    const matchUrl  = msg.text.match(/^\/face ([A-z0-9_-\s]*) (https?:\/\/.*)/)
-    const match     = matchUser || matchUrl
+    const matchUrl = msg.text.match(/^\/face ([A-z0-9_-\s]*) (https?:\/\/.*)/)
+    const match = matchUser || matchUrl
 
     // If no matches, show usage
     if (!match || !match[1]) {
-      throw new Error('Usage: /face <filters> <@username>')
+      bot.sendMessage(chatId, 'Usage: /face <filters> <@username>')
+      return
     }
 
     // Prepare and check filters
     const filters: string[] = await prepareFilters(match[1], MAX_FILTERS)
     if (filters.length === 0) {
-      throw new Error('No filters inputted')
+      bot.sendMessage(chatId, 'No filters inputted')
+      return
     }
 
     // Logging
@@ -73,6 +75,7 @@ bot.onText(/^\/face.*$/, async msg => {
     waitMessage = await bot.sendMessage(chatId, 'Please wait, the photo is being processed...', {
       disable_notification: true
     })
+
     if (waitMessage instanceof Error) {
       throw waitMessage
     }
@@ -85,9 +88,12 @@ bot.onText(/^\/face.*$/, async msg => {
 
     const processedPhoto: Buffer = await processPhoto(filters, photoUrl)
     bot.sendPhoto(chatId, processedPhoto)
-  } catch(err) {
+  } catch (err) {
+    writeLogToFile(err.message)
     bot.sendMessage(chatId, err.message)
   } finally {
-    bot.deleteMessage(chatId, waitMessage.message_id.toString())
+    if (waitMessage) {
+      bot.deleteMessage(chatId, waitMessage.message_id.toString())
+    }
   }
 })
