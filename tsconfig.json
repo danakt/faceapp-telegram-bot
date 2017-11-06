@@ -1,13 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "esNext",
     "module": "commonjs",
-    "experimentalDecorators": true,
-    "lib": [
-      "es5",
-      "es6"
-    ],
-    "outDir": "dist/",
-    "removeComments": true
+    "experimentalDecorators": true
   }
 }
