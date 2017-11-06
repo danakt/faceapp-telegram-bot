@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "node dist/index",
+    "start-ts": "ts-node scr/index",
+    "build": "tsc"
   },
   "license": "MIT",
   "devDependencies": {
