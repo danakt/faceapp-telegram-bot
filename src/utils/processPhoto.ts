@@ -1,12 +1,12 @@
 import * as request from 'request-promise'
-import * as faceapp from 'faceapp'
+import { process }  from '../faceapp'
 
 /**
  * Processing face on photo
  * @param  {string}          type    Type of input
  * @param  {Array<string>}   filters List of filters for applying to image
  * @param  {string}          url     Image url
- * @return {Promise<string>} 
+ * @return {Promise<string>}
  */
 export default async function processPhoto(filters: string[], url: string): Promise<Buffer> {
   // Creating request to url
@@ -20,16 +20,16 @@ export default async function processPhoto(filters: string[], url: string): Prom
 
 /**
  * Get the buffer of image
- * @param  {string} url 
- * @return {Promise<Buffer>} 
+ * @param  {string} url
+ * @return {Promise<Buffer>}
  */
 async function getImageBuffer(url: string): Promise<Buffer> {
   // Getting avatar body
-  const avatarBody: Buffer = await request({ 
-    url, 
+  const avatarBody: Buffer = await request({
+    url,
     encoding: null,
   })
-  
+
   return avatarBody
 }
 
@@ -44,7 +44,7 @@ async function applyFilters(filters: string[], imageBuffer: Buffer): Promise<Buf
   let accumulate: Buffer = imageBuffer
 
   for (let filter of filters) {
-    accumulate = await faceapp.process(accumulate, filter)
+    accumulate = await process(accumulate, filter)
   }
 
   return accumulate
