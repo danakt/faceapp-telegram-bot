@@ -1,4 +1,4 @@
-import { listFilters } from 'faceapp'
+import { listFilters } from '../faceapp'
 
 /**
  * Return available filters
