@@ -8,6 +8,7 @@ export default async function prepareFilters(filtersMatch: string, limit: number
   const filtersArray = filtersMatch
     .split(' ')
     .map(item => item.slice().toLowerCase())
+    .filter(Boolean)
     .slice(0, limit)
 
   return filtersArray
