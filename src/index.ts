@@ -88,12 +88,17 @@ bot.onText(/^\/face.*$/, async msg => {
 
     const processedPhoto: Buffer = await processPhoto(filters, photoUrl)
     bot.sendPhoto(chatId, processedPhoto)
-  } catch (err) {
-    writeLogToFile(err.message)
-    bot.sendMessage(chatId, err.message)
-  } finally {
     if (waitMessage) {
       bot.deleteMessage(chatId, waitMessage.message_id.toString())
     }
+  } catch (err) {
+    writeLogToFile(err.message)
+    bot.sendMessage(chatId, err.message)
+
+    if (waitMessage) {
+      bot.deleteMessage(chatId, waitMessage.message_id.toString())
+    }
+
+    throw err
   }
 })
