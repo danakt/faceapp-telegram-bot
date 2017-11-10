@@ -102,3 +102,11 @@ bot.onText(/^\/face.*$/, async msg => {
     throw err
   }
 })
+
+/**
+ * Ping
+ * @event /ping
+ */
+bot.onText(/^\/ping/, msg => {
+  bot.sendMessage(msg.chat.id, 'Pong!')
+})
