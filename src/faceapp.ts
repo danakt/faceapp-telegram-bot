@@ -122,7 +122,9 @@ export async function process(path: Buffer, filterID: string): Promise<Buffer> {
  * @param {boolean} [minimal=false] Whether to only return an array of filter IDs (no extra metadata)
  * @returns {Promise<Filter[]>|Promise<string[]>}
  */
-export const listFilters = async (minimal = false) => {
+export async function listFilters(minimal: true): Promise<string[]>
+export async function listFilters(minimal: false): Promise<Filter[]>
+export async function listFilters(minimal: boolean = false) {
   const res = await superagent.get(TEST_IMAGE_URL)
   const allFilters = await getAvailableFilters(res.body)
 
