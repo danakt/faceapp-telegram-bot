@@ -5,8 +5,17 @@ import getAvatarUrl                   from './utils/getAvatarUrl'
 import processPhoto                   from './utils/processPhoto'
 import getAvailableFilters            from './utils/getAvailableFilters'
 
+/**
+ * Token
+ */
+const TOKEN = process.env.TOKEN
+
+if (TOKEN == null) {
+  throw new Error('Token is not setted')
+}
+
 /** Bot instance */
-const bot: TelegramBot = new TelegramBot(process.env.TOKEN, { polling: true })
+const bot: TelegramBot = new TelegramBot(TOKEN, { polling: true })
 
 /** Limit of filters */
 const MAX_FILTERS = 5
