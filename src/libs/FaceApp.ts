@@ -58,7 +58,7 @@ export default class FaceApp {
    * @constructor
    * @param {number} version API version
    */
-  public constructor(public version: number = 2.6) {
+  public constructor(version: number = 2.6) {
     this.baseUrl = `https://node-03.faceapp.io/api/v${version}/photos`
   }
 
@@ -99,27 +99,33 @@ export default class FaceApp {
   }
 
   /**
-   * Lists all available filters
-   * @param {boolean} [minimal=false] Whether to only return an array of filter IDs (no extra metadata)
-   * @returns {Promise<Filter[]>|Promise<string[]>}
+   * Get array of available filters names
+   * @return {Promise<string[]>}
    */
-  public async listFilters(minimal: true): Promise<string[]>
-  public async listFilters(minimal: false): Promise<Filter[]>
-  public async listFilters(minimal: boolean = false) {
-    const res = await superagent.get(FaceApp.TEST_IMAGE_URL)
-    const allFilters = await this.getAvailableFilters(res.body)
+  public async getFilters(): Promise<string[]> {
+    const filters: AvailableFiltersResponse = await this.getAvailableFilters()
+    const filtersList: string[] = filters.filters.map((a: Filter) => a.id)
 
-    return minimal
-      ? allFilters.filters.map(a => a.id)
-      : allFilters.filters
+    return filtersList
   }
 
   /**
-   * @param {Buffer} file Input File
+   * Get list all available filters with details
+   * @returns {Promise<Filter[]>}
+   */
+  public async getFiltersDetail(): Promise<Filter[]> {
+    const filtersResponse: AvailableFiltersResponse = await this.getAvailableFilters()
+
+    return filtersResponse.filters
+  }
+
+  /**
    * @return {Promise<AvailableFiltersResponse>}
    */
-  private async getAvailableFilters(file: Buffer): Promise<AvailableFiltersResponse> {
-    const deviceID = FaceApp.generateDeviceID()
+  private async getAvailableFilters(): Promise<AvailableFiltersResponse> {
+    const testImageResponse = await superagent.get(FaceApp.TEST_IMAGE_URL)
+    const file: Buffer = testImageResponse.body
+    const deviceID: string = FaceApp.generateDeviceID()
 
     const res = await superagent.post(this.baseUrl)
       .set('User-Agent', FaceApp.API_USER_AGENT)
