@@ -17,7 +17,7 @@ interface Filter {
 /**
  * Avaliable filters response interface
  */
-interface AvailableFiltersResponse {
+interface ProcessResponse {
   code: string
   deviceID: string
   filters: Filter[]
@@ -27,20 +27,32 @@ interface AvailableFiltersResponse {
  * Faceapp class with functonal for photo processing
  */
 export default class FaceApp {
-  /**
-   * Test photo for request filters
-   */
-  private static TEST_IMAGE_URL = 'https://i.imgur.com/nVsxMNp.jpg'
+  /** Test photo for request filters */
+  private static TEST_PHOTO_URL = 'https://i.imgur.com/nVsxMNp.jpg'
 
-  /**
-   * Useragent for creating request
-   */
+  /** Useragent for creating request */
   private static API_USER_AGENT = 'FaceApp/2.0.561 (Linux; Android 6.0)'
 
   /**
-   * Request url
+   * Time of updating the filters in memory
+   * 1 hour by default
    */
+  private static FILTERS_UPDATING_TIME = 36e5
+
+  /** Request url */
   private baseUrl: string
+
+  /**
+   * Buffer of test photo
+   * @type {Buffer}
+   */
+  private testPhotoBuffer?: Buffer
+
+  /** Available filters. Updates every 10 minutes */
+  private memoryFilters: Filter[]
+
+  /** Timestamp of last filters updating */
+  private lastFiltersGettingTime: number
 
   /**
    * Generate a random Device ID
@@ -60,6 +72,16 @@ export default class FaceApp {
    */
   public constructor(version: number = 2.6) {
     this.baseUrl = `https://node-03.faceapp.io/api/v${version}/photos`
+
+    // Update test photo buffer
+    this.getTestPhotoBuffer().then(testPhotoBuffer => {
+      this.testPhotoBuffer = testPhotoBuffer
+    })
+
+    // First filters updating
+    this.getFiltersDetail().then(memoryFilters => {
+      this.memoryFilters = memoryFilters
+    })
   }
 
   /**
@@ -70,8 +92,8 @@ export default class FaceApp {
    */
   public async process(path: Buffer, filterID: string): Promise<Buffer> {
     try {
-      const arg: AvailableFiltersResponse = await this.getAvailableFilters(path)
-      const img: Buffer = await this.getFilterImage(arg, filterID)
+      const arg: ProcessResponse = await this.getAvailableFilters(path)
+      const img: Buffer = await this.getFilteredImage(arg, filterID)
 
       return img
     } catch (err) {
@@ -103,8 +125,8 @@ export default class FaceApp {
    * @return {Promise<string[]>}
    */
   public async getFilters(): Promise<string[]> {
-    const filters: AvailableFiltersResponse = await this.getAvailableFilters()
-    const filtersList: string[] = filters.filters.map((a: Filter) => a.id)
+    const filters: Filter[] = await this.getFiltersDetail()
+    const filtersList: string[] = filters.map((a: Filter) => a.id)
 
     return filtersList
   }
@@ -114,23 +136,34 @@ export default class FaceApp {
    * @returns {Promise<Filter[]>}
    */
   public async getFiltersDetail(): Promise<Filter[]> {
-    const filtersResponse: AvailableFiltersResponse = await this.getAvailableFilters()
+    // If the time has not yet come
+    if (this.memoryFilters != null && Date.now() < this.lastFiltersGettingTime + FaceApp.FILTERS_UPDATING_TIME) {
+      return this.memoryFilters
+    }
 
-    return filtersResponse.filters
+    const testImageBuffer: Buffer = await this.getTestPhotoBuffer()
+    const filtersResponse: ProcessResponse = await this.getAvailableFilters(testImageBuffer)
+    const filters: Filter[] = filtersResponse.filters
+
+    // Updating available filters
+    this.memoryFilters = filters
+    this.lastFiltersGettingTime = Date.now()
+
+    return filters
   }
 
   /**
-   * @return {Promise<AvailableFiltersResponse>}
+   * Return available filters for photo
+   * @param {Buffer} buffer Photo buffer
+   * @return {Promise<ProcessResponse>}
    */
-  private async getAvailableFilters(): Promise<AvailableFiltersResponse> {
-    const testImageResponse = await superagent.get(FaceApp.TEST_IMAGE_URL)
-    const file: Buffer = testImageResponse.body
+  private async getAvailableFilters(buffer: Buffer): Promise<ProcessResponse> {
     const deviceID: string = FaceApp.generateDeviceID()
 
     const res = await superagent.post(this.baseUrl)
       .set('User-Agent', FaceApp.API_USER_AGENT)
       .set('X-FaceApp-DeviceID', deviceID)
-      .attach('file', file, 'image.png')
+      .attach('file', buffer, 'image.png')
 
     const code = res.body.code
     const filters = res.body.filters.map((o: any): Filter => ({
@@ -140,15 +173,17 @@ export default class FaceApp {
       paid: o.is_paid,
     }))
 
+    const processResponse: ProcessResponse = { code, deviceID, filters }
+
     return { code, deviceID, filters }
   }
 
   /**
-   * @param {AvailableFiltersResponse} args Input Object
+   * @param {ProcessResponse} args Input Object
    * @param {string} filterID Filter ID
    * @return {Promise<Buffer>}
    */
-  private async getFilterImage(args: AvailableFiltersResponse, filterID: string = 'no-filter'): Promise<Buffer> {
+  private async getFilteredImage(args: ProcessResponse, filterID: string = 'no-filter'): Promise<Buffer> {
     // Remove invalid filters
     const filterArr: Filter[] = args.filters.filter(o => o.id === filterID)
 
@@ -166,5 +201,17 @@ export default class FaceApp {
       .set('X-FaceApp-DeviceID', args.deviceID)
 
     return res.body
+  }
+
+  /**
+   * Returns buffer of test photo
+   */
+  private async getTestPhotoBuffer(): Promise<Buffer> {
+    if (this.testPhotoBuffer === undefined) {
+      const resp = await superagent.get(FaceApp.TEST_PHOTO_URL)
+      this.testPhotoBuffer = resp.body
+    }
+
+    return this.testPhotoBuffer!
   }
 }
