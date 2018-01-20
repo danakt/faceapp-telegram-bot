@@ -1,15 +1,14 @@
 import getTelegramBot from './utils/getTelegramBot'
-import getFaceApp from './utils/getFaceApp'
+import FaceApp from './libs/FaceApp'
+import I18n from './libs/I18n'
+import { locales } from './lang'
 import { createEvents } from './events'
 
-/**
- * Bot instance
- */
-const bot = getTelegramBot()
+const FACEAPP_VERSION = 2.6
 
-/**
- * FaceApp instance
- */
-const faceApp = getFaceApp()
+const bot = getTelegramBot(process.env.TOKEN)
+const faceApp = new FaceApp(FACEAPP_VERSION)
+const i18n = new I18n(locales)
 
-createEvents(bot, faceApp)
+/** Register event listeners */
+createEvents(bot, faceApp, i18n)

@@ -2,11 +2,22 @@ import * as TelegramBot from 'node-telegram-bot-api'
 import FaceApp from './libs/FaceApp'
 import getPhotoBufferById from './utils/getPhotoBufferById'
 import arrayToButtons from './utils/arrayToButtons'
+import I18n from './libs/I18n'
 
 /**
  * Creates event listeners
  */
-export function createEvents(bot: TelegramBot, faceApp: FaceApp): void {
+export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n): void {
+  // Starting dialog with bot
+  bot.onText(/^\/start|^\/help/, message => {
+    // Detect user language
+    const langCode: string = message.from!.language_code!.slice(0, 2).toLocaleLowerCase()
+    i18n.setLangCode(langCode)
+
+    const chatId = message.chat.id
+    bot.sendMessage(chatId, i18n.getMessage('START'), { parse_mode: 'Markdown' })
+  })
+
   // Receiving the photo
   bot.on('photo', async (message: TelegramBot.Message) => {
     const chatId: number = message.chat.id
@@ -21,24 +32,20 @@ export function createEvents(bot: TelegramBot, faceApp: FaceApp): void {
 
     // Showing filters to apply
     bot.sendPhoto(chatId, photoId, {
-      caption: 'Choose the filter to apply to the photo',
+      caption: i18n.getMessage('CHOOSE_FILTER'),
       reply_markup: {
         inline_keyboard: inlineKeys
       },
     })
-
-    // Process the photo
-
-    // Sends photo
-    // bot.sendPhoto(chatId, processedPhotoBuffer)
   })
 
+  // Callback query listener
   bot.on('callback_query', async (callback: TelegramBot.CallbackQuery) => {
     const message = callback.message!
     const chatId: number = message.chat.id
 
     // Send waiting messsage
-    const waitingMessagePromise = bot.sendMessage(chatId, 'Please await, the photo is being processed...', {
+    const waitingMessagePromise = bot.sendMessage(chatId, i18n.getMessage('PHOTO_IS_PROCESSING'), {
       disable_notification: true
     })
 

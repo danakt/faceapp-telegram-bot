@@ -40,20 +40,20 @@ export default class I18n {
    * Resturns internationalized message
    * @return {string}
    */
-  public getI18nMessage(
+  public getMessage(
     key: keyof LangLibrary['en'],
     langCode: string = this.langCode,
   ): string {
     const langBlock: LangLibrary['en'] | void = this.langLib[langCode as keyof LangLibrary]
 
     if (langCode !== 'en' && langBlock == null) {
-      return this.getI18nMessage(key, 'en')
+      return this.getMessage(key, 'en')
     }
 
     const message: string | void = langBlock[key]
 
     if (langCode !== 'en' && message === undefined) {
-      return this.getI18nMessage(key, 'en')
+      return this.getMessage(key, 'en')
     } else if (langCode === 'en' && message === undefined) {
       throw new Error(`Not found lang key "${key}"`)
     }
