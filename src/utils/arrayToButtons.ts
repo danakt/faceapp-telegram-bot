@@ -6,18 +6,19 @@ import { InlineKeyboardButton } from 'node-telegram-bot-api'
  * @return {InlineKeyboardButton[][]}
  */
 export default function arrayToButtons(strList: string[]): InlineKeyboardButton[][] {
-  const isOdd: boolean = strList.length % 2 === 1
-  const strListCopy: string[] = strList.slice()
+  // Removing dublicates and copy array to available mutatings
+  const uniqueArray: string[] = [...new Set(strList)]
+  // Out 2D array
   const strList2d: string[][] = []
 
   // If the array lingth is odd, add only first button
-  if (isOdd) {
-    strList2d.push(strListCopy.splice(0, 1))
+  if (uniqueArray.length % 2 === 1) {
+    strList2d.push(uniqueArray.splice(0, 1))
   }
 
   // Adding other buttons to array
-  while (strListCopy.length) {
-    strList2d.push(strListCopy.splice(0, 2))
+  while (uniqueArray.length) {
+    strList2d.push(uniqueArray.splice(0, 2))
   }
 
   // Transforms string array to buttons
