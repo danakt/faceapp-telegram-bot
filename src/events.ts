@@ -92,4 +92,8 @@ export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n, log
     })
   })
 
+  // Ping-pong
+  bot.onText(/^\/ping/, message => {
+    bot.sendMessage(message.chat.id, 'Pong!')
+  })
 }
