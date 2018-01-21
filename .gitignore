@@ -1,4 +1,9 @@
+# dirs
 node_modules/
 logs/
+
+# files
 package-lock.json
 token.ts
+RUN
+TOKEN
