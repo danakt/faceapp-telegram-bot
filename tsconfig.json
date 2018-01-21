@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "esNext",
     "module": "commonjs",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "strict": true
   }
 }
