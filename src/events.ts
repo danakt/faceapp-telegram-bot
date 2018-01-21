@@ -3,11 +3,12 @@ import FaceApp from './libs/FaceApp'
 import getPhotoBufferById from './utils/getPhotoBufferById'
 import arrayToButtons from './utils/arrayToButtons'
 import I18n from './libs/I18n'
+import Logger from './libs/Logger'
 
 /**
  * Creates event listeners
  */
-export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n): void {
+export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n, logger: Logger): void {
   // Starting dialog with bot
   bot.onText(/^\/start|^\/help/, message => {
     // Detect user language
@@ -20,6 +21,9 @@ export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n): vo
 
   // Receiving the photo
   bot.on('photo', async (message: TelegramBot.Message) => {
+    const langCode: string = message.from!.language_code!.slice(0, 2).toLocaleLowerCase()
+    i18n.setLangCode(langCode)
+
     const chatId: number = message.chat.id
 
     // Get filters to show
@@ -49,14 +53,36 @@ export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n): vo
       disable_notification: true
     })
 
-    // Get photo id from message
-    const photoId: string = message.photo![message.photo!.length - 1].file_id
+    try {
+      // Get photo id from message
+      const photoId: string = message.photo![message.photo!.length - 1].file_id
 
-    // Get buffer of the photo
-    const photoBuffer: Buffer = await getPhotoBufferById(photoId, bot)
-    // Process the photo
-    const filter: string = callback.data!
-    const processedPhotoBuffer: Buffer = await faceApp.process(photoBuffer, filter)
+      // Get buffer of the photo
+      const photoBuffer: Buffer = await getPhotoBufferById(photoId, bot)
+
+      // Getting filter
+      const filter: string = callback.data!
+
+      // Writing log
+      const photoLink = await bot.getFileLink(photoId)
+      const username: void | string = message.chat!.username
+      // TODO: Show the name of requester
+      logger.info(`${username ? '@' + username : 'Somebody'} applied filter "${filter}" to photo ${photoLink}`)
+
+      // Process the photo
+      const processedPhotoBuffer: Buffer = await faceApp.process(photoBuffer, filter)
+
+      // Sendimng processed photo
+      bot.sendPhoto(chatId, processedPhotoBuffer)
+    } catch (err) {
+      // Sending error message
+      if (err.message === 'No Faces found in Photo') {
+        bot.sendMessage(chatId, i18n.getMessage('NO_FACES'))
+      } else {
+        logger.info(err.message)
+        bot.sendMessage(chatId, i18n.getMessage('UNKNOWN_ERROR'))
+      }
+    }
 
     // Delete waiting message
     waitingMessagePromise.then(message => {
@@ -64,9 +90,6 @@ export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n): vo
         bot.deleteMessage(chatId, message.message_id.toString())
       }
     })
-
-    // Sendimng processed photo
-    bot.sendPhoto(chatId, processedPhotoBuffer)
   })
 
 }
