@@ -1,4 +1,4 @@
-import { createWriteStream, existsSync, mkdirSync, WriteStream } from 'fs'
+import { createWriteStream, existsSync, mkdirSync, WriteStream, readFile } from 'fs'
 
 /**
  * Class for writing logs to logfile
@@ -54,6 +54,23 @@ export default class LogWritter {
 
     const writeStream: WriteStream = this.writeStreams[level][dateString]
     writeStream.write(text.replace(/^\n^|^  /gm, '') + '\n\n')
+  }
+
+  /**
+   * Return current logfile
+   * @return {Promise<string>}
+   */
+  public getLogs(level: Level): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      readFile(this.getFilePath(level), 'utf-8', (err, data: string) => {
+        if (err) {
+          reject(err)
+          return
+        }
+
+        resolve(data)
+      })
+    })
   }
 
   /**

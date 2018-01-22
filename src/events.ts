@@ -6,9 +6,28 @@ import I18n from './libs/I18n'
 import Logger from './libs/Logger'
 
 /**
+ * Type of events configuration
+ */
+type EventsConfig = {
+  adminNicknames: string[],
+  bot: TelegramBot,
+  i18n: I18n,
+  faceApp: FaceApp,
+  logger: Logger,
+}
+
+/**
  * Creates event listeners
  */
-export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n, logger: Logger): void {
+export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: EventsConfig): void {
+  /**
+   * Checks is user have admins right
+   * @return {booelan}
+   */
+  function isUserAdmin(username: void | string): boolean {
+    return typeof username === 'string' && adminNicknames.includes(username)
+  }
+
   // Starting dialog with bot
   bot.onText(/^\/start|^\/help/, message => {
     // Detect user language
@@ -95,5 +114,27 @@ export function createEvents(bot: TelegramBot, faceApp: FaceApp, i18n: I18n, log
   // Ping-pong
   bot.onText(/^\/ping/, message => {
     bot.sendMessage(message.chat.id, 'Pong!')
+  })
+
+  // Logs
+  bot.onText(/^\/logs/, async message => {
+    const from = message.from
+    if (!from) {
+      return
+    }
+
+    // Checking admin rights
+    const username: void | string = from.username
+    if (!isUserAdmin(username)) {
+      return
+    }
+
+    try {
+      const logs: string = await logger.getLogs('info')
+      bot.sendMessage(message.chat.id, logs)
+    } catch (err) {
+      bot.sendMessage(message.chat.id, `Сould not get logs: ${err && err.message}`)
+    }
+
   })
 }
