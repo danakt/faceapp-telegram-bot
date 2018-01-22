@@ -83,10 +83,18 @@ export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: Eve
       const filter: string = callback.data!
 
       // Writing log
-      const photoLink = await bot.getFileLink(photoId)
-      const username: void | string = message.chat!.username
+      const photoFile = await bot.getFile(photoId)
+      if (photoFile instanceof Error) {
+        throw photoFile
+      }
+
+      const filePath: string = photoFile.file_path!
+      const username: void | string = message.chat && message.chat.username
+        ? '@' + message.chat.username
+        : 'Sombeody'
+
       // TODO: Show the name of requester
-      logger.info(`${username ? '@' + username : 'Somebody'} applied filter "${filter}" to photo ${photoLink}`)
+      logger.info(`${username} ${filter} ${filePath}`)
 
       // Process the photo
       const processedPhotoBuffer: Buffer = await faceApp.process(photoBuffer, filter)

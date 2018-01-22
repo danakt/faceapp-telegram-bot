@@ -1,4 +1,5 @@
 import LogWriter from './LogWriter'
+import * as dateformat from 'dateformat'
 
 /**
  * Logging API
@@ -16,13 +17,10 @@ export default class Logger extends LogWriter {
    * @param {string} message Info message
    */
   public info(message: string): void {
-    const curDate: Date = new Date()
-    const utcString: string = curDate.toUTCString()
+    const formattedMessage = this.formatMessage(message)
+    this.writeToLog(formattedMessage, 'info')
 
-    const formatMessage: string = `[${utcString}] ${message}`
-    console.info(formatMessage)
-
-    this.writeToLog(formatMessage, 'info')
+    console.info(formattedMessage)
   }
 
   /**
@@ -30,12 +28,31 @@ export default class Logger extends LogWriter {
    * @param {string} message Error message
    */
   public error(message: string): void {
-    const curDate: Date = new Date()
-    const utcString: string = curDate.toUTCString()
+    const formattedMessage = this.formatMessage(message)
+    this.writeToLog(formattedMessage, 'error')
 
-    const formatMessage: string = `[${utcString}] ${message}`
-    console.error(formatMessage)
+    console.error(formattedMessage)
+  }
 
-    this.writeToLog(formatMessage, 'error')
+  /**
+   * Returns the time
+   * @return {string}
+   */
+  public getDate(): string {
+    const now: Date = new Date()
+    const dateString: string = dateformat(now, 'yyyy-mm-dd HH:MM:ss')
+
+    return dateString
+  }
+
+  /**
+   * Formatting the message for log
+   * @param {string} message The message
+   */
+  public formatMessage(message: string) {
+    const date: string = this.getDate()
+    const formatMessage: string = `${date}: ${message}`
+
+    return formatMessage
   }
 }

@@ -18,10 +18,7 @@ export default class LogWritter {
    * @param {string} dirName Directory of log files
    */
   public constructor(private dirName: string) {
-    // Making log dir
-    if (!existsSync(dirName)) {
-      mkdirSync(dirName)
-    }
+    this.makeLogDirIfNotExists()
   }
 
   /**
@@ -30,6 +27,8 @@ export default class LogWritter {
    * @param {Level} level Level of log
    */
   public writeToLog(text: string, level: Level = 'info'): void {
+    this.makeLogDirIfNotExists()
+
     const dateString: string = this.getDateString()
 
     // Making new writestream if no exists
@@ -53,7 +52,7 @@ export default class LogWritter {
     }
 
     const writeStream: WriteStream = this.writeStreams[level][dateString]
-    writeStream.write(text.replace(/^\n^|^  /gm, '') + '\n\n')
+    writeStream.write(text.replace(/^\n^|^  /gm, '') + '\n')
   }
 
   /**
@@ -117,5 +116,15 @@ export default class LogWritter {
     }
 
     return this.dateString
+  }
+
+  /**
+   * Makes dir if it no exists
+   */
+  private makeLogDirIfNotExists(): void {
+    // Making log dir
+    if (!existsSync(this.dirName)) {
+      mkdirSync(this.dirName)
+    }
   }
 }
