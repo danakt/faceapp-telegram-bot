@@ -1,6 +1,18 @@
 import { InlineKeyboardButton } from 'node-telegram-bot-api'
 
 /**
+ * Formats the filter name
+ * @param filter Filter name
+ * @return {string}
+ */
+function formatFilterName(filter: string): string {
+  const replacedLodash = filter.replace(/_/g, '')
+  const capitalized = replacedLodash[0].toUpperCase() + replacedLodash.slice(1)
+
+  return capitalized
+}
+
+/**
  * Converts 1D array to 2D buttons array
  * @param {string[]} strList
  * @return {InlineKeyboardButton[][]}
@@ -25,7 +37,7 @@ export default function arrayToButtons(strList: string[]): InlineKeyboardButton[
   const buttons = strList2d.map((strList: string[]) => {
     return strList.map((item: string, i: number): InlineKeyboardButton => {
      return {
-        text: item,
+        text: formatFilterName(item),
         callback_data: item,
       }
     })
