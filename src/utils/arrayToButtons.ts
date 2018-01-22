@@ -6,7 +6,7 @@ import { InlineKeyboardButton } from 'node-telegram-bot-api'
  * @return {string}
  */
 function formatFilterName(filter: string): string {
-  const replacedLodash = filter.replace(/_/g, '')
+  const replacedLodash = filter.replace(/_/g, ' ')
   const capitalized = replacedLodash[0].toUpperCase() + replacedLodash.slice(1)
 
   return capitalized
