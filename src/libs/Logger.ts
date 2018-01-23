@@ -40,7 +40,9 @@ export default class Logger extends LogWriter {
    */
   public getDate(): string {
     const now: Date = new Date()
-    const dateString: string = dateformat(now, 'yyyy-mm-dd HH:MM:ss')
+    // const dateString: string = dateformat(now, 'yyyy-mm-dd HH:MM:ss')
+    // Log file alredy has date
+    const dateString: string = dateformat(now, 'HH:MM:ss')
 
     return dateString
   }
