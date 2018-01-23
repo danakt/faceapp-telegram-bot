@@ -139,6 +139,8 @@ export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: Eve
 
     try {
       const logs: string = await logger.getLogs('info')
+      // Currently (23.01.2018) max length of messages is 4096 chars
+      const cuttedLogs = logs.slice(-4e3)
       bot.sendMessage(message.chat.id, logs)
     } catch (err) {
       bot.sendMessage(message.chat.id, `Сould not get logs: ${err && err.message}`)
