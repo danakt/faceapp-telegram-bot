@@ -9,17 +9,23 @@ import Logger from './libs/Logger'
  * Type of events configuration
  */
 type EventsConfig = {
-  adminNicknames: string[],
-  bot: TelegramBot,
-  i18n: I18n,
-  faceApp: FaceApp,
-  logger: Logger,
+  adminNicknames: string[]
+  bot: TelegramBot
+  i18n: I18n
+  faceApp: FaceApp
+  logger: Logger
 }
 
 /**
  * Creates event listeners
  */
-export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: EventsConfig): void {
+export function createEvents({
+  adminNicknames,
+  bot,
+  i18n,
+  faceApp,
+  logger
+}: EventsConfig): void {
   /**
    * Checks is user have admins right
    * @return {booelan}
@@ -31,23 +37,31 @@ export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: Eve
   // Starting dialog with bot
   bot.onText(/^\/start|^\/help/, message => {
     // Detect user language
-    const langCode: string = message.from!.language_code!.slice(0, 2).toLocaleLowerCase()
+    const langCode: string = message
+      .from!.language_code!.slice(0, 2)
+      .toLocaleLowerCase()
     i18n.setLangCode(langCode)
 
     const chatId = message.chat.id
-    bot.sendMessage(chatId, i18n.getMessage('START'), { parse_mode: 'Markdown' })
+    bot.sendMessage(chatId, i18n.getMessage('START'), {
+      parse_mode: 'Markdown'
+    })
   })
 
   // Receiving the photo
   bot.on('photo', async (message: TelegramBot.Message) => {
-    const langCode: string = message.from!.language_code!.slice(0, 2).toLocaleLowerCase()
+    const langCode: string = message
+      .from!.language_code!.slice(0, 2)
+      .toLocaleLowerCase()
     i18n.setLangCode(langCode)
 
     const chatId: number = message.chat.id
 
     // Get filters to show
     const filters: string[] = await faceApp.getFilters()
-    const inlineKeys: TelegramBot.InlineKeyboardButton[][] = arrayToButtons(filters)
+    const inlineKeys: TelegramBot.InlineKeyboardButton[][] = arrayToButtons(
+      filters
+    )
 
     // Get last photo from message
     // Last photo in the array is the biggest
@@ -58,7 +72,7 @@ export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: Eve
       caption: i18n.getMessage('CHOOSE_FILTER'),
       reply_markup: {
         inline_keyboard: inlineKeys
-      },
+      }
     })
   })
 
@@ -68,9 +82,13 @@ export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: Eve
     const chatId: number = message.chat.id
 
     // Send waiting messsage
-    const waitingMessagePromise = bot.sendMessage(chatId, i18n.getMessage('PHOTO_IS_PROCESSING'), {
-      disable_notification: true
-    })
+    const waitingMessagePromise = bot.sendMessage(
+      chatId,
+      i18n.getMessage('PHOTO_IS_PROCESSING'),
+      {
+        disable_notification: true
+      }
+    )
 
     try {
       // Get photo id from message
@@ -89,15 +107,19 @@ export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: Eve
       }
 
       const filePath: string = photoFile.file_path!
-      const username: void | string = message.chat && message.chat.username
-        ? '@' + message.chat.username
-        : 'Sombeody'
+      const username: void | string =
+        message.chat && message.chat.username
+          ? '@' + message.chat.username
+          : 'Sombeody'
 
       // TODO: Show the name of requester
       logger.info(`${username} ${filter} ${filePath}`)
 
       // Process the photo
-      const processedPhotoBuffer: Buffer = await faceApp.process(photoBuffer, filter)
+      const processedPhotoBuffer: Buffer = await faceApp.process(
+        photoBuffer,
+        filter
+      )
 
       // Sendimng processed photo
       bot.sendPhoto(chatId, processedPhotoBuffer)
@@ -143,8 +165,10 @@ export function createEvents({ adminNicknames, bot, i18n, faceApp, logger }: Eve
       const cuttedLogs = logs.slice(-4e3)
       bot.sendMessage(message.chat.id, cuttedLogs)
     } catch (err) {
-      bot.sendMessage(message.chat.id, `Сould not get logs: ${err && err.message}`)
+      bot.sendMessage(
+        message.chat.id,
+        `Could not get logs: ${err && err.message}`
+      )
     }
-
   })
 }
