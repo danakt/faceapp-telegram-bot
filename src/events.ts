@@ -171,4 +171,29 @@ export function createEvents({
       )
     }
   })
+
+  bot.onText(/^\/switch (\d+)/, (message, match) => {
+    const from = message.from
+    if (!from) {
+      return
+    }
+
+    // Checking admin rights
+    const username: void | string = from.username
+    if (!isUserAdmin(username)) {
+      return
+    }
+
+    if (match == null) {
+      return
+    }
+
+    const currentServer = faceApp.currentServerInx
+    faceApp.switchServerInx(parseInt(match[1]))
+
+    bot.sendMessage(
+      message.chat.id,
+      `Server successfully switched from ${currentServer} to ${match[1]}`
+    )
+  })
 }

@@ -37,7 +37,7 @@ export default class FaceApp {
   private static AVAILABLE_SERVERS = [1, 3, 4]
 
   /** Index of current server from array above */
-  private currentServerInx = 0
+  public currentServerInx = 0
 
   /**
    * Time of updating the filters in memory
@@ -90,16 +90,25 @@ export default class FaceApp {
     })
   }
 
+
   /**
    * Request url getter
    */
-  get baseUrl(): string {
+  private get baseUrl(): string {
     const currentServer = FaceApp.AVAILABLE_SERVERS[this.currentServerInx]
     const currentUrl = `https://node-0${currentServer}.faceapp.io/api/v${
       this.version
     }/photos`
 
     return currentUrl
+  }
+
+  /**
+   * Switches server index
+   * @param serverInx Server index
+   */
+  public switchServerInx(serverInx: number) {
+    this.currentServerInx = Math.max(0, Math.min(serverInx, FaceApp.AVAILABLE_SERVERS.length - 1))
   }
 
   /**
