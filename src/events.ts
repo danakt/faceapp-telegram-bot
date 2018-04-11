@@ -193,7 +193,7 @@ export function createEvents({
 
     bot.sendMessage(
       message.chat.id,
-      `Server successfully switched from ${currentServer} to ${match[1]}`
+      `Server successfully switched from ${currentServer} to ${faceApp.currentServerInx}`
     )
   })
 }
