@@ -15,7 +15,7 @@ interface Filter {
 }
 
 /**
- * Avaliable filters response interface
+ * Available filters response interface
  */
 interface ProcessResponse {
   code: string
@@ -24,7 +24,7 @@ interface ProcessResponse {
 }
 
 /**
- * Faceapp class with functonal for photo processing
+ * FaceApp class with functional for photo processing
  */
 export default class FaceApp {
   /** Test photo for request filters */
