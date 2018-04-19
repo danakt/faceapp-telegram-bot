@@ -12,7 +12,7 @@ export default class LogWritter {
   } = {}
 
   /** Date of log writer in format yyyy-mm-dd */
-  private dateString: string
+  private dateString: string = ''
 
   /**
    * @param {string} dirName Directory of log files
