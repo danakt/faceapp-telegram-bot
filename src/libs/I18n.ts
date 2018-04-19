@@ -28,7 +28,7 @@ export default class I18n {
 
   /**
    * Sets lang code
-   * @param langCode Languagle code
+   * @param langCode Language code
    */
   public setLangCode(langCode: string) {
     if (this.supportedLangCodes.includes(langCode)) {

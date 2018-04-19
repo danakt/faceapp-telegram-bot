@@ -37,10 +37,14 @@ export function createEvents({
   // Starting dialog with bot
   bot.onText(/^\/start|^\/help/, message => {
     // Detect user language
-    const langCode: string = message
-      .from!.language_code!.slice(0, 2)
-      .toLocaleLowerCase()
-    i18n.setLangCode(langCode)
+    if (message.from && message.from.language_code) {
+      const langCode: string = message.from.language_code
+        .slice(0, 2)
+        .toLocaleLowerCase()
+
+        i18n.setLangCode(langCode)
+    }
+
 
     const chatId = message.chat.id
     bot.sendMessage(chatId, i18n.getMessage('START'), {
@@ -193,7 +197,9 @@ export function createEvents({
 
     bot.sendMessage(
       message.chat.id,
-      `Server successfully switched from ${currentServer} to ${faceApp.currentServerInx}`
+      `Server successfully switched from ${currentServer} to ${
+        faceApp.currentServerInx
+      }`
     )
   })
 }
