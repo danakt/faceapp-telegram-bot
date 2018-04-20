@@ -1,5 +1,8 @@
+import { ConstructorOptions } from 'node-telegram-bot-api'
 import { resolve } from 'path'
-import getTelegramBot from './utils/getTelegramBot'
+import createTelegramBotInstance from './utils/createTelegramBotInstance'
+import Agent from 'socks5-http-client'
+
 import FaceApp from './libs/FaceApp'
 import I18n from './libs/I18n'
 import Logger from './libs/Logger'
@@ -9,7 +12,17 @@ import { createEvents } from './events'
 const FACEAPP_VERSION = 2.8
 const ADMINS = ['danakt']
 
-const bot = getTelegramBot(process.env.TOKEN)
+const bot = createTelegramBotInstance(process.env.TOKEN, {
+  polling: true,
+  request: {
+    agentClass: Agent,
+    agentOptions: {
+      socksHost: '195.201.137.246',
+      socksPort: 1080
+    }
+  } as any
+})
+
 const faceApp = new FaceApp(FACEAPP_VERSION)
 const i18n = new I18n(locales)
 const logger = new Logger(resolve(__dirname, '../logs'))
@@ -20,5 +33,5 @@ createEvents({
   bot,
   faceApp,
   i18n,
-  logger,
+  logger
 })
