@@ -16,6 +16,7 @@
   "dependencies": {
     "dateformat": "^3.0.2",
     "node-telegram-bot-api": "^0.29.0",
+    "socks5-http-client": "^1.0.3",
     "superagent": "^3.8.1"
   }
 }
