@@ -1,24 +1,27 @@
 import { ConstructorOptions } from 'node-telegram-bot-api'
 import { resolve } from 'path'
 import createTelegramBotInstance from './utils/createTelegramBotInstance'
-import Agent from 'socks5-http-client'
-
+import * as Agent from 'socks5-https-client/lib/Agent'
 import FaceApp from './libs/FaceApp'
 import I18n from './libs/I18n'
 import Logger from './libs/Logger'
 import { locales } from './lang'
 import { createEvents } from './events'
+import * as request from 'request-promise'
+import { getRandomProxy } from './utils/getRandomProxy'
 
 const FACEAPP_VERSION = 2.8
 const ADMINS = ['danakt']
+
+const connectionProxy = getRandomProxy()
 
 const bot = createTelegramBotInstance(process.env.TOKEN, {
   polling: true,
   request: {
     agentClass: Agent,
     agentOptions: {
-      socksHost: '195.201.137.246',
-      socksPort: 1080
+      socksHost: connectionProxy.host,
+      socksPort: connectionProxy.port
     }
   } as any
 })
