@@ -8,12 +8,13 @@ import Logger from './libs/Logger'
 import { locales } from './lang'
 import { createEvents } from './events'
 import * as request from 'request-promise'
-import { getRandomProxy } from './utils/getRandomProxy'
+import { getRandomProxy } from './proxy'
 
 const FACEAPP_VERSION = 2.8
 const ADMINS = ['danakt']
 
 const connectionProxy = getRandomProxy()
+console.log(`Current proxy: ${connectionProxy.host}:${connectionProxy.port}`)
 
 const bot = createTelegramBotInstance(process.env.TOKEN, {
   polling: true,
@@ -26,7 +27,6 @@ const bot = createTelegramBotInstance(process.env.TOKEN, {
   } as any
 })
 
-const faceApp = new FaceApp(FACEAPP_VERSION)
 const i18n = new I18n(locales)
 const logger = new Logger(resolve(__dirname, '../logs'))
 
@@ -34,7 +34,6 @@ const logger = new Logger(resolve(__dirname, '../logs'))
 createEvents({
   adminNicknames: ADMINS,
   bot,
-  faceApp,
   i18n,
   logger
 })

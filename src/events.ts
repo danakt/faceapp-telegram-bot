@@ -1,9 +1,17 @@
 import * as TelegramBot from 'node-telegram-bot-api'
-import FaceApp from './libs/FaceApp'
+import * as Agent from 'socks5-https-client/lib/Agent'
 import getPhotoBufferById from './utils/getPhotoBufferById'
-import arrayToButtons from './utils/arrayToButtons'
+import { createButtons } from './utils/createButtons'
 import I18n from './libs/I18n'
 import Logger from './libs/Logger'
+import { sendPhoto, getPhoto } from './utils/faceapp'
+import { generateDeviceId } from './utils/generateDeviceId'
+import {
+  getRandomProxy,
+  getRandomProxyIndex,
+  proxyList,
+  getProxyByIndex
+} from './proxy'
 
 /**
  * Type of events configuration
@@ -12,7 +20,6 @@ type EventsConfig = {
   adminNicknames: string[]
   bot: TelegramBot
   i18n: I18n
-  faceApp: FaceApp
   logger: Logger
 }
 
@@ -23,18 +30,19 @@ export function createEvents({
   adminNicknames,
   bot,
   i18n,
-  faceApp,
   logger
 }: EventsConfig): void {
   /**
    * Checks is user have admins right
-   * @return {booelan}
+   * @return {boolean}
    */
   function isUserAdmin(username: void | string): boolean {
     return typeof username === 'string' && adminNicknames.includes(username)
   }
 
-  // Starting dialog with bot
+  /**
+   * Starting dialog with bot
+   */
   bot.onText(/^\/start|^\/help/, message => {
     // Detect user language
     if (message.from && message.from.language_code) {
@@ -42,9 +50,8 @@ export function createEvents({
         .slice(0, 2)
         .toLocaleLowerCase()
 
-        i18n.setLangCode(langCode)
+      i18n.setLangCode(langCode)
     }
-
 
     const chatId = message.chat.id
     bot.sendMessage(chatId, i18n.getMessage('START'), {
@@ -52,7 +59,9 @@ export function createEvents({
     })
   })
 
-  // Receiving the photo
+  /**
+   * Receiving the photo
+   */
   bot.on('photo', async (message: TelegramBot.Message) => {
     const langCode: string = message
       .from!.language_code!.slice(0, 2)
@@ -61,72 +70,36 @@ export function createEvents({
 
     const chatId: number = message.chat.id
 
-    // Get filters to show
-    const filters: string[] = await faceApp.getFilters()
-    const inlineKeys: TelegramBot.InlineKeyboardButton[][] = arrayToButtons(
-      filters
-    )
-
     // Get last photo from message
     // Last photo in the array is the biggest
     const photoId: string = message.photo![message.photo!.length - 1].file_id
 
-    // Showing filters to apply
-    bot.sendPhoto(chatId, photoId, {
-      caption: i18n.getMessage('CHOOSE_FILTER'),
-      reply_markup: {
-        inline_keyboard: inlineKeys
-      }
-    })
-  })
-
-  // Callback query listener
-  bot.on('callback_query', async (callback: TelegramBot.CallbackQuery) => {
-    const message = callback.message!
-    const chatId: number = message.chat.id
-
-    // Send waiting messsage
-    const waitingMessagePromise = bot.sendMessage(
-      chatId,
-      i18n.getMessage('PHOTO_IS_PROCESSING'),
-      {
-        disable_notification: true
-      }
-    )
-
     try {
-      // Get photo id from message
-      const photoId: string = message.photo![message.photo!.length - 1].file_id
-
       // Get buffer of the photo
       const photoBuffer: Buffer = await getPhotoBufferById(photoId, bot)
 
-      // Getting filter
-      const filter: string = callback.data!
+      // Generate identifier of device
+      const deviceId = generateDeviceId()
 
-      // Writing log
-      const photoFile = await bot.getFile(photoId)
-      if (photoFile instanceof Error) {
-        throw photoFile
-      }
+      // Getting random proxy
+      const proxyIndex = getRandomProxyIndex()
+      const proxy = getProxyByIndex(proxyIndex)
 
-      const filePath: string = photoFile.file_path!
-      const username: void | string =
-        message.chat && message.chat.username
-          ? '@' + message.chat.username
-          : 'Sombeody'
-
-      // TODO: Show the name of requester
-      logger.info(`${username} ${filter} ${filePath}`)
-
-      // Process the photo
-      const processedPhotoBuffer: Buffer = await faceApp.process(
+      // // Sending photo to server and return filters list
+      const { filters, code } = await sendPhoto(
         photoBuffer,
-        filter
+        deviceId,
+        Agent,
+        proxy
       )
 
-      // Sendimng processed photo
-      bot.sendPhoto(chatId, processedPhotoBuffer)
+      // Showing filters to apply
+      bot.sendPhoto(chatId, photoId, {
+        caption: i18n.getMessage('CHOOSE_FILTER'),
+        reply_markup: {
+          inline_keyboard: createButtons(filters, code, deviceId, proxyIndex)
+        }
+      })
     } catch (err) {
       // Sending error message
       if (err.message === 'No Faces found in Photo') {
@@ -136,6 +109,72 @@ export function createEvents({
         bot.sendMessage(chatId, i18n.getMessage('UNKNOWN_ERROR'))
       }
     }
+  })
+
+  /**
+   * Callback query listener
+   */
+  bot.on('callback_query', async (callback: TelegramBot.CallbackQuery) => {
+    const message = callback.message!
+    const chatId: number = message.chat.id
+
+    // Send waiting message
+    const waitingMessagePromise = bot.sendMessage(
+      chatId,
+      i18n.getMessage('PHOTO_IS_PROCESSING'),
+      {
+        disable_notification: true
+      }
+    )
+
+    // Get photo id from message
+    const photoId: string = message.photo![message.photo!.length - 1].file_id
+
+    // Get buffer of the photo
+    const photoBuffer: Buffer = await getPhotoBufferById(photoId, bot)
+
+    const [
+      filter,
+      isCropped,
+      code,
+      deviceId,
+      proxyIndex
+    ]: string[] = callback.data!.split(':')
+
+    // Proxy
+    const proxy = getProxyByIndex(Number(proxyIndex))
+
+    // Writing log
+    const photoFile = await bot.getFile(photoId)
+    if (photoFile instanceof Error) {
+      throw photoFile
+    }
+
+    const filePath: string = photoFile.file_path!
+    const username: void | string = message.chat!.username
+      ? '@' + message.chat!.username
+      : `${message.chat!.first_name} ${message.chat!.last_name}`
+
+    // TODO: Show the name of requester
+    logger.info(`${username} ${filter} ${filePath}`)
+
+    // Process the photo
+    const processedPhotoBuffer: void | Buffer = await getPhoto(
+      filter,
+      code,
+      isCropped as '1' | '0',
+      deviceId,
+      Agent,
+      proxy
+    )
+
+    // Sending processed photo
+    bot.sendPhoto(chatId, processedPhotoBuffer)
+
+    // Finish answer waiting
+    bot.answerCallbackQuery({
+      callback_query_id: callback.id
+    })
 
     // Delete waiting message
     waitingMessagePromise.then(message => {
@@ -166,40 +205,13 @@ export function createEvents({
     try {
       const logs: string = await logger.getLogs('info')
       // Currently (23.01.2018) max length of messages is 4096 chars
-      const cuttedLogs = logs.slice(-4e3)
-      bot.sendMessage(message.chat.id, cuttedLogs)
+      const cutLogs = logs.slice(-4e3)
+      bot.sendMessage(message.chat.id, cutLogs)
     } catch (err) {
       bot.sendMessage(
         message.chat.id,
         `Could not get logs: ${err && err.message}`
       )
     }
-  })
-
-  bot.onText(/^\/switch (\d+)/, (message, match) => {
-    const from = message.from
-    if (!from) {
-      return
-    }
-
-    // Checking admin rights
-    const username: void | string = from.username
-    if (!isUserAdmin(username)) {
-      return
-    }
-
-    if (match == null) {
-      return
-    }
-
-    const currentServer = faceApp.currentServerInx
-    faceApp.switchServerInx(parseInt(match[1]))
-
-    bot.sendMessage(
-      message.chat.id,
-      `Server successfully switched from ${currentServer} to ${
-        faceApp.currentServerInx
-      }`
-    )
   })
 }

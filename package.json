@@ -8,6 +8,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/dateformat": "^1.0.1",
+    "@types/form-data": "^2.2.1",
     "@types/node-telegram-bot-api": "^0.28.2",
     "@types/request-promise": "^4.1.41",
     "@types/superagent": "^3.5.6",
@@ -16,6 +17,7 @@
   },
   "dependencies": {
     "dateformat": "^3.0.2",
+    "form-data": "^2.3.2",
     "node-telegram-bot-api": "0.30.0",
     "request-promise": "^4.2.2",
     "socks5-http-client": "^1.0.3",
