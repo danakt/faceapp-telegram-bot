@@ -1,6 +1,7 @@
 # dirs
 node_modules/
 logs/
+.vscode/
 
 # files
 package-lock.json
